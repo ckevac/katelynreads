@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katelyn's Reading Log</title>
     
-    <!-- Favicon for Chrome/Desktop Browsers -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png">
-    
-    <!-- Web App Icon for iPad Home Screen -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,55 +19,20 @@
         .card { border-radius: 24px; box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.05); }
         .btn-animate:active { transform: scale(0.95); }
         .pink-gradient { background: linear-gradient(to right, #ec4899, #d946ef); }
-        .purple-btn { background-color: #a855f7; }
-        .yellow-accent { background-color: #facc15; }
-        
-        /* Logo Styling with Shine Effect */
         .logo-container {
-            position: relative;
-            width: 110px;
-            height: 110px;
-            margin: 0 auto;
-            overflow: hidden;
-            border-radius: 9999px;
-            border: 4px solid white;
+            position: relative; width: 110px; height: 110px; margin: 0 auto;
+            overflow: hidden; border-radius: 9999px; border: 4px solid white;
             box-shadow: 0 8px 20px rgba(236, 72, 153, 0.2);
         }
-
-        .profile-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .profile-img { width: 100%; height: 100%; object-fit: cover; }
+        .tab-active { border-bottom: 4px solid #ec4899; color: #ec4899; }
+        
+        /* Pulse for the "Check Silent Mode" alert */
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-
-        .logo-container::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                to bottom right,
-                rgba(255, 255, 255, 0) 0%,
-                rgba(255, 255, 255, 0.1) 40%,
-                rgba(255, 255, 255, 0.4) 50%,
-                rgba(255, 255, 255, 0.1) 60%,
-                rgba(255, 255, 255, 0) 100%
-            );
-            transform: rotate(-45deg);
-            animation: shine 4s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
-            20%, 100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
-        }
-
-        .tab-active {
-            border-bottom: 4px solid #ec4899;
-            color: #ec4899;
-        }
+        .animate-pulse-slow { animation: pulse-red 2s infinite; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -79,16 +41,14 @@
         <!-- Header -->
         <div class="text-center mb-4">
             <div class="logo-container mb-2">
-                <img id="logoImg" 
-                     src="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png" 
+                <img id="logoImg" src="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png" 
                      onerror="this.src='https://api.dicebear.com/7.x/fun-emoji/svg?seed=reading&backgroundColor=fdf2f8'"
-                     alt="Katelyn Reading" 
-                     class="profile-img">
+                     alt="Katelyn Reading" class="profile-img">
             </div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text pink-gradient">Katelyn's Reading Log</h1>
         </div>
 
-        <!-- Navigation Tabs -->
+        <!-- Navigation -->
         <div class="flex border-b border-gray-100 mb-6">
             <button id="tabLog" class="flex-1 py-2 font-bold text-gray-400 tab-active" onclick="switchTab('log')">✍️ Log</button>
             <button id="tabReport" class="flex-1 py-2 font-bold text-gray-400" onclick="switchTab('report')">📊 Reports</button>
@@ -96,13 +56,25 @@
 
         <!-- LOG VIEW -->
         <div id="viewLog">
-            <!-- Timer Section -->
             <div class="mb-6 p-4 bg-purple-50 rounded-2xl border-2 border-purple-100">
-                <div id="timerDisplay" class="text-3xl font-bold text-center text-purple-600 mb-3">20:00</div>
-                <div class="flex gap-2 mb-3">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-purple-400 uppercase">Reading Timer</span>
+                    <button onclick="playAlarm()" class="text-[10px] bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full hover:bg-purple-300">🔔 Test Sound</button>
+                </div>
+                
+                <div id="timerDisplay" class="text-4xl font-bold text-center text-purple-600 mb-2">20:00</div>
+                
+                <!-- iPad Specific Reminder -->
+                <div id="ipadReminder" class="hidden text-center mb-4">
+                    <p class="text-[10px] font-bold text-red-500 uppercase animate-pulse-slow">
+                        ⚠️ iPad Tip: Check "Silent Mode" in Control Center!
+                    </p>
+                </div>
+
+                <div class="flex gap-2">
                     <input type="number" id="timerInput" placeholder="Min" min="1" value="20"
-                        class="w-16 p-2 text-center border-2 border-purple-200 rounded-lg focus:outline-none">
-                    <button id="setTimerBtn" class="flex-1 purple-btn text-white font-bold py-2 rounded-lg btn-animate">Set</button>
+                        class="w-16 p-2 text-center border-2 border-purple-200 rounded-lg focus:outline-none font-bold">
+                    <button id="setTimerBtn" class="flex-1 bg-purple-500 text-white font-bold py-2 rounded-lg btn-animate">Set</button>
                     <button id="startTimerBtn" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg btn-animate">Start</button>
                     <button id="stopTimerBtn" class="flex-1 bg-red-400 text-white font-bold py-2 rounded-lg btn-animate hidden">Stop</button>
                 </div>
@@ -111,65 +83,40 @@
             <form id="readingForm" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Date</label>
-                    <input type="date" id="date" required 
-                        class="w-full p-3 border-2 border-pink-100 rounded-xl focus:border-pink-400 focus:outline-none">
+                    <input type="date" id="date" required class="w-full p-3 border-2 border-pink-100 rounded-xl focus:border-pink-400 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Book Title</label>
-                    <input type="text" id="title" placeholder="Book title..." required
-                        class="w-full p-3 border-2 border-purple-100 rounded-xl focus:border-purple-400 focus:outline-none">
+                    <input type="text" id="title" placeholder="What are you reading?" required class="w-full p-3 border-2 border-purple-100 rounded-xl focus:border-purple-400 focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Minutes Read</label>
-                    <input type="number" id="duration" placeholder="0" required min="1"
-                        class="w-full p-3 border-2 border-yellow-200 rounded-xl focus:border-yellow-400 focus:outline-none">
+                    <input type="number" id="duration" placeholder="0" required min="1" class="w-full p-3 border-2 border-yellow-200 rounded-xl focus:border-yellow-400 focus:outline-none font-bold">
                 </div>
-                <div>
-                    <div class="flex gap-3">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="language" value="English" checked class="hidden peer">
-                            <div class="text-sm text-center p-2 border-2 border-pink-100 rounded-xl peer-checked:bg-pink-500 peer-checked:text-white font-bold transition-all">
-                                English 🇬🇧
-                            </div>
-                        </label>
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="language" value="French" class="hidden peer">
-                            <div class="text-sm text-center p-2 border-2 border-purple-100 rounded-xl peer-checked:bg-purple-500 peer-checked:text-white font-bold transition-all">
-                                French 🇫🇷
-                            </div>
-                        </label>
-                    </div>
+                <div class="flex gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="language" value="English" checked class="hidden peer">
+                        <div class="text-sm text-center p-3 border-2 border-pink-100 rounded-xl peer-checked:bg-pink-500 peer-checked:text-white font-bold transition-all">English 🇬🇧</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="language" value="French" class="hidden peer">
+                        <div class="text-sm text-center p-3 border-2 border-purple-100 rounded-xl peer-checked:bg-purple-500 peer-checked:text-white font-bold transition-all">French 🇫🇷</div>
+                    </label>
                 </div>
-                <button type="submit" id="submitBtn"
-                    class="w-full pink-gradient text-white font-bold py-4 rounded-xl shadow-lg transition-all btn-animate text-lg mt-2">
-                    Log My Reading! ✨
-                </button>
+                <button type="submit" id="submitBtn" class="w-full pink-gradient text-white font-bold py-4 rounded-xl shadow-lg btn-animate text-lg mt-2">Log Reading! ✨</button>
             </form>
         </div>
 
-        <!-- REPORT VIEW -->
+        <!-- REPORT VIEW (Shortened for space) -->
         <div id="viewReport" class="hidden">
             <div class="space-y-4">
-                <!-- Month Selector -->
-                <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-xl">
-                    <label class="text-sm font-bold text-gray-600 px-2">Month:</label>
-                    <input type="month" id="reportMonth" class="flex-1 bg-transparent border-none focus:outline-none font-bold text-purple-600">
-                </div>
-
-                <!-- Language Toggle for Chart -->
-                <div class="flex bg-gray-100 p-1 rounded-xl">
-                    <button onclick="updateChartFilter('All')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg bg-white shadow-sm text-pink-600" data-filter="All">Both</button>
-                    <button onclick="updateChartFilter('English')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="English">EN</button>
-                    <button onclick="updateChartFilter('French')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="French">FR</button>
-                </div>
-
+                <input type="month" id="reportMonth" class="w-full p-2 bg-gray-50 rounded-xl border-none font-bold text-purple-600">
                 <div class="bg-white rounded-2xl border border-gray-100 p-2">
-                    <canvas id="readingChart" height="250"></canvas>
+                    <canvas id="readingChart" height="200"></canvas>
                 </div>
-
                 <div id="statsSummary" class="grid grid-cols-2 gap-3 text-center">
                     <div class="bg-pink-50 p-3 rounded-xl border border-pink-100">
-                        <div class="text-xs text-pink-400 font-bold uppercase">Total Time</div>
+                        <div class="text-xs text-pink-400 font-bold uppercase">Time</div>
                         <div id="statTotal" class="text-xl font-bold text-pink-600">0 min</div>
                     </div>
                     <div class="bg-purple-50 p-3 rounded-xl border border-purple-100">
@@ -180,59 +127,69 @@
             </div>
         </div>
 
-        <div id="status" class="mt-4 text-center hidden">
-            <p class="p-3 rounded-lg font-medium"></p>
-        </div>
+        <div id="status" class="mt-4 text-center hidden"></div>
     </div>
 
     <script>
-        // --- DATA PERSISTENCE ---
-        let localData = JSON.parse(localStorage.getItem('katelyn_logs') || '[]');
-        let chartInstance = null;
-        let currentFilter = 'All';
+        // --- PRO AUDIO ENGINE (iPad Optimized) ---
+        let audioCtx;
+        let audioBuffer;
 
-        // --- TABS ---
-        function switchTab(tab) {
-            document.getElementById('viewLog').classList.toggle('hidden', tab !== 'log');
-            document.getElementById('viewReport').classList.toggle('hidden', tab !== 'report');
-            document.getElementById('tabLog').classList.toggle('tab-active', tab === 'log');
-            document.getElementById('tabReport').classList.toggle('tab-active', tab === 'report');
-            if (tab === 'report') renderChart();
+        async function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                const response = await fetch('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            } catch (e) { console.error("Audio init error", e); }
         }
 
-        // --- TIMER ---
+        function playAlarm() {
+            if (!audioCtx || !audioBuffer) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        }
+
+        // --- TIMER LOGIC ---
         let timerInterval;
         let timeLeft = 1200;
-        const timerDisplay = document.getElementById('timerDisplay');
-        const timerInput = document.getElementById('timerInput');
+        const display = document.getElementById('timerDisplay');
         const startBtn = document.getElementById('startTimerBtn');
         const stopBtn = document.getElementById('stopTimerBtn');
-        const setBtn = document.getElementById('setTimerBtn');
+        const ipadRem = document.getElementById('ipadReminder');
 
-        function updateTimerDisplay() {
-            const mins = Math.floor(timeLeft / 60);
-            const secs = timeLeft % 60;
-            timerDisplay.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+        function updateDisplay() {
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            display.innerText = `${m}:${s.toString().padStart(2, '0')}`;
         }
 
-        setBtn.onclick = () => {
-            timeLeft = parseInt(timerInput.value || 20) * 60;
-            updateTimerDisplay();
+        document.getElementById('setTimerBtn').onclick = () => {
+            timeLeft = parseInt(document.getElementById('timerInput').value || 20) * 60;
+            updateDisplay();
         };
 
-        startBtn.onclick = () => {
+        startBtn.onclick = async () => {
+            await initAudio(); // Initial interaction unlocks Web Audio
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             startBtn.classList.add('hidden');
             stopBtn.classList.remove('hidden');
+            ipadRem.classList.remove('hidden');
+
             timerInterval = setInterval(() => {
                 timeLeft--;
-                updateTimerDisplay();
+                updateDisplay();
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
-                    document.getElementById('duration').value = timerInput.value;
-                    alert("⏰ Time's up, Katelyn!");
-                    stopBtn.classList.add('hidden');
-                    startBtn.classList.remove('hidden');
+                    playAlarm();
+                    document.getElementById('duration').value = document.getElementById('timerInput').value;
+                    showMessage("⏰ Time's up! Great reading!", "bg-purple-600 text-white shadow-xl");
+                    stopBtn.click();
                 }
             }, 1000);
         };
@@ -241,10 +198,19 @@
             clearInterval(timerInterval);
             stopBtn.classList.add('hidden');
             startBtn.classList.remove('hidden');
+            ipadRem.classList.add('hidden');
         };
 
-        // --- FORM ---
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwQpKw9iatIsHzoWbAFleOpd__PbTWYeeQfZRsn4EV1Ku5qoNrbhrSD9bRmEAhN-VE/exec';
+        // --- TABS & FORM ---
+        function switchTab(t) {
+            document.getElementById('viewLog').classList.toggle('hidden', t !== 'log');
+            document.getElementById('viewReport').classList.toggle('hidden', t !== 'report');
+            document.getElementById('tabLog').classList.toggle('tab-active', t === 'log');
+            document.getElementById('tabReport').classList.toggle('tab-active', t === 'report');
+            if (t === 'report') renderChart();
+        }
+
+        let localData = JSON.parse(localStorage.getItem('katelyn_logs') || '[]');
         document.getElementById('date').valueAsDate = new Date();
         document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
 
@@ -256,99 +222,50 @@
                 duration: parseInt(document.getElementById('duration').value),
                 language: document.querySelector('input[name="language"]:checked').value
             };
-
             localData.push(log);
             localStorage.setItem('katelyn_logs', JSON.stringify(localData));
-
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "Saving... 🌟";
-
-            try {
-                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(log) });
-                showMessage("Great job! Saved to your sheet. 📖", "bg-green-100 text-green-700");
-                document.getElementById('readingForm').reset();
-                document.getElementById('date').valueAsDate = new Date();
-            } catch (e) {
-                showMessage("Saved locally, but couldn't send to Sheet.", "bg-yellow-100 text-yellow-700");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Log My Reading! ✨";
-            }
+            showMessage("Saved! 🌟", "bg-green-100 text-green-700");
+            e.target.reset();
+            document.getElementById('date').valueAsDate = new Date();
         };
 
-        // --- CHARTS & REPORTS ---
-        function updateChartFilter(lang) {
-            currentFilter = lang;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                const isActive = btn.dataset.filter === lang;
-                btn.classList.toggle('bg-white', isActive);
-                btn.classList.toggle('shadow-sm', isActive);
-                btn.classList.toggle('text-pink-600', isActive);
-                btn.classList.toggle('text-gray-500', !isActive);
-            });
-            renderChart();
+        function showMessage(msg, cls) {
+            const s = document.getElementById('status');
+            s.className = `mt-4 p-4 rounded-xl text-center font-bold transition-all ${cls}`;
+            s.innerText = msg;
+            s.classList.remove('hidden');
+            setTimeout(() => s.classList.add('hidden'), 5000);
         }
 
-        document.getElementById('reportMonth').onchange = renderChart;
-
+        // --- BASIC CHART ---
+        let chartInstance;
         function renderChart() {
-            const selectedMonth = document.getElementById('reportMonth').value;
-            const filteredData = localData.filter(d => {
-                const isMonth = d.date.startsWith(selectedMonth);
-                const isLang = currentFilter === 'All' || d.language === currentFilter;
-                return isMonth && isLang;
-            });
+            const month = document.getElementById('reportMonth').value;
+            const filtered = localData.filter(d => d.date.startsWith(month));
+            const books = new Set(filtered.map(d => d.title.toLowerCase()));
+            const total = filtered.reduce((acc, d) => acc + d.duration, 0);
 
-            const daysInMonth = new Date(selectedMonth.split('-')[0], selectedMonth.split('-')[1], 0).getDate();
-            const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
-            const dataPoints = Array(daysInMonth).fill(0);
-            
-            let totalTime = 0;
-            let uniqueBooks = new Set();
-
-            filteredData.forEach(d => {
-                const day = parseInt(d.date.split('-')[2]);
-                dataPoints[day-1] += d.duration;
-                totalTime += d.duration;
-                uniqueBooks.add(d.title.toLowerCase());
-            });
-
-            document.getElementById('statTotal').innerText = `${totalTime} min`;
-            document.getElementById('statBooks').innerText = uniqueBooks.size;
+            document.getElementById('statTotal').innerText = `${total} min`;
+            document.getElementById('statBooks').innerText = books.size;
 
             const ctx = document.getElementById('readingChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: Array.from({length: 31}, (_, i) => i + 1),
                     datasets: [{
                         label: 'Minutes',
-                        data: dataPoints,
-                        backgroundColor: currentFilter === 'French' ? '#a855f7' : '#ec4899',
-                        borderRadius: 5,
+                        data: Array.from({length: 31}, (_, i) => {
+                            const dayStr = `${month}-${(i + 1).toString().padStart(2, '0')}`;
+                            return filtered.filter(d => d.date === dayStr).reduce((a, b) => a + b.duration, 0);
+                        }),
+                        backgroundColor: '#ec4899',
+                        borderRadius: 4
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { display: false } },
-                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                    }
-                }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
-        }
-
-        function showMessage(msg, classes) {
-            const status = document.getElementById('status');
-            status.className = `mt-4 text-center ${classes} p-3 rounded-lg`;
-            status.innerHTML = `<p>${msg}</p>`;
-            status.classList.remove('hidden');
-            setTimeout(() => status.classList.add('hidden'), 5000);
         }
     </script>
 </body>
