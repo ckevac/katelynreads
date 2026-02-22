@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reading Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap');
+        body { font-family: 'Quicksand', sans-serif; background-color: #f0f9ff; }
+        .card { border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .btn-animate:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-8 card w-full max-w-md border-t-8 border-blue-400">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">📚 Reading Log</h1>
+            <p class="text-gray-500">Record your latest adventure!</p>
+        </div>
+
+        <form id="readingForm" class="space-y-5">
+            <!-- Date -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Date</label>
+                <input type="date" id="date" required 
+                    class="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-400 focus:outline-none transition-colors">
+            </div>
+
+            <!-- Title -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Book Title</label>
+                <input type="text" id="title" placeholder="What are you reading?" required
+                    class="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-400 focus:outline-none transition-colors">
+            </div>
+
+            <!-- Duration -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Time Spent (minutes)</label>
+                <input type="number" id="duration" placeholder="e.g. 20" required min="1"
+                    class="w-full p-3 border-2 border-blue-100 rounded-xl focus:border-blue-400 focus:outline-none transition-colors">
+            </div>
+
+            <!-- Language -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Language</label>
+                <div class="flex gap-4">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="language" value="English" checked class="hidden peer">
+                        <div class="text-center p-3 border-2 border-blue-100 rounded-xl peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 transition-all">
+                            English 🇬🇧
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="language" value="French" class="hidden peer">
+                        <div class="text-center p-3 border-2 border-blue-100 rounded-xl peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500 transition-all">
+                            French 🇫🇷
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg transition-all btn-animate">
+                Log My Reading! ✨
+            </button>
+        </form>
+
+        <div id="status" class="mt-4 text-center hidden">
+            <p class="p-3 rounded-lg font-medium"></p>
+        </div>
+    </div>
+
+    <script>
+        // YOUR GOOGLE APPS SCRIPT URL
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwQpKw9iatIsHzoWbAFleOpd__PbTWYeeQfZRsn4EV1Ku5qoNrbhrSD9bRmEAhN-VE/exec'; 
+
+        // Set default date to today
+        document.getElementById('date').valueAsDate = new Date();
+
+        const form = document.getElementById('readingForm');
+        const status = document.getElementById('status');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                date: document.getElementById('date').value,
+                title: document.getElementById('title').value,
+                duration: document.getElementById('duration').value,
+                language: document.querySelector('input[name="language"]:checked').value
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sending... 🚀";
+            
+            try {
+                // Using 'no-cors' mode as required by Google Apps Script for simple POST requests from browser
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                // Since 'no-cors' doesn't return a readable response, we assume success if no error is thrown
+                showMessage("Great job! Saved to your reading log. 📖", "bg-green-100 text-green-700");
+                form.reset();
+                document.getElementById('date').valueAsDate = new Date();
+            } catch (error) {
+                console.error('Error!', error.message);
+                showMessage("Oops! Something went wrong. Try again.", "bg-red-100 text-red-700");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Log My Reading! ✨";
+            }
+        });
+
+        function showMessage(msg, classes) {
+            status.className = `mt-4 text-center ${classes}`;
+            status.querySelector('p').innerText = msg;
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>
