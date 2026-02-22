@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katelyn's Reading Log</title>
     
+    <!-- Favicon for Chrome/Desktop Browsers -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png">
+    
     <!-- Web App Icon for iPad Home Screen -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png">
     
@@ -22,12 +25,46 @@
         .purple-btn { background-color: #a855f7; }
         .yellow-accent { background-color: #facc15; }
         
-        .profile-img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
+        /* Logo Styling with Shine Effect */
+        .logo-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 9999px;
             border: 4px solid white;
             box-shadow: 0 8px 20px rgba(236, 72, 153, 0.2);
+        }
+
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logo-container::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.1) 40%,
+                rgba(255, 255, 255, 0.4) 50%,
+                rgba(255, 255, 255, 0.1) 60%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(-45deg);
+            animation: shine 4s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
+            20%, 100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
         }
 
         .tab-active {
@@ -41,12 +78,12 @@
     <div class="bg-white p-6 card w-full max-w-md border-t-8 border-pink-400">
         <!-- Header -->
         <div class="text-center mb-4">
-            <div class="flex justify-center mb-2">
+            <div class="logo-container mb-2">
                 <img id="logoImg" 
                      src="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png" 
                      onerror="this.src='https://api.dicebear.com/7.x/fun-emoji/svg?seed=reading&backgroundColor=fdf2f8'"
                      alt="Katelyn Reading" 
-                     class="profile-img rounded-full">
+                     class="profile-img">
             </div>
             <h1 class="text-2xl font-bold text-transparent bg-clip-text pink-gradient">Katelyn's Reading Log</h1>
         </div>
@@ -150,8 +187,6 @@
 
     <script>
         // --- DATA PERSISTENCE ---
-        // We'll store data locally for the chart to work offline/instantly, 
-        // while still sending it to Google Sheets.
         let localData = JSON.parse(localStorage.getItem('katelyn_logs') || '[]');
         let chartInstance = null;
         let currentFilter = 'All';
@@ -222,7 +257,6 @@
                 language: document.querySelector('input[name="language"]:checked').value
             };
 
-            // Save locally
             localData.push(log);
             localStorage.setItem('katelyn_logs', JSON.stringify(localData));
 
@@ -259,14 +293,13 @@
         document.getElementById('reportMonth').onchange = renderChart;
 
         function renderChart() {
-            const selectedMonth = document.getElementById('reportMonth').value; // YYYY-MM
+            const selectedMonth = document.getElementById('reportMonth').value;
             const filteredData = localData.filter(d => {
                 const isMonth = d.date.startsWith(selectedMonth);
                 const isLang = currentFilter === 'All' || d.language === currentFilter;
                 return isMonth && isLang;
             });
 
-            // Group by Day
             const daysInMonth = new Date(selectedMonth.split('-')[0], selectedMonth.split('-')[1], 0).getDate();
             const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
             const dataPoints = Array(daysInMonth).fill(0);
