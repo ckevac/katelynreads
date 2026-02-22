@@ -27,12 +27,22 @@
         .profile-img { width: 100%; height: 100%; object-fit: cover; }
         .tab-active { border-bottom: 4px solid #ec4899; color: #ec4899; }
         
-        /* Pulse for the "Check Silent Mode" alert */
         @keyframes pulse-red {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
         .animate-pulse-slow { animation: pulse-red 2s infinite; }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ec4899;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -64,7 +74,6 @@
                 
                 <div id="timerDisplay" class="text-4xl font-bold text-center text-purple-600 mb-2">20:00</div>
                 
-                <!-- iPad Specific Reminder -->
                 <div id="ipadReminder" class="hidden text-center mb-4">
                     <p class="text-[10px] font-bold text-red-500 uppercase animate-pulse-slow">
                         ⚠️ iPad Tip: Check "Silent Mode" in Control Center!
@@ -107,16 +116,27 @@
             </form>
         </div>
 
-        <!-- REPORT VIEW (Shortened for space) -->
+        <!-- REPORT VIEW -->
         <div id="viewReport" class="hidden">
             <div class="space-y-4">
-                <input type="month" id="reportMonth" class="w-full p-2 bg-gray-50 rounded-xl border-none font-bold text-purple-600">
-                <div class="bg-white rounded-2xl border border-gray-100 p-2">
-                    <canvas id="readingChart" height="200"></canvas>
+                <div class="flex justify-between items-center">
+                    <input type="month" id="reportMonth" class="p-2 bg-gray-50 rounded-xl border-none font-bold text-purple-600 focus:outline-none">
+                    <div id="refreshIndicator" class="hidden"><div class="loader"></div></div>
                 </div>
+
+                <div class="flex bg-gray-100 p-1 rounded-xl">
+                    <button onclick="updateChartFilter('All')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg bg-white shadow-sm text-pink-600" data-filter="All">Both</button>
+                    <button onclick="updateChartFilter('English')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="English">EN</button>
+                    <button onclick="updateChartFilter('French')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="French">FR</button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-100 p-2" style="height: 200px; position: relative;">
+                    <canvas id="readingChart"></canvas>
+                </div>
+
                 <div id="statsSummary" class="grid grid-cols-2 gap-3 text-center">
                     <div class="bg-pink-50 p-3 rounded-xl border border-pink-100">
-                        <div class="text-xs text-pink-400 font-bold uppercase">Time</div>
+                        <div class="text-xs text-pink-400 font-bold uppercase">Total Time</div>
                         <div id="statTotal" class="text-xl font-bold text-pink-600">0 min</div>
                     </div>
                     <div class="bg-purple-50 p-3 rounded-xl border border-purple-100">
@@ -131,7 +151,13 @@
     </div>
 
     <script>
-        // --- PRO AUDIO ENGINE (iPad Optimized) ---
+        // --- CONFIG ---
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz-QZeVDHM14hUZfzDlVovm-HeyAv6YQ0hi2k4QPEeRnvGP29lscStUjRSxPkg6hPEp/exec';
+        let localData = []; 
+        let currentFilter = 'All';
+        let chartInstance;
+
+        // --- AUDIO ENGINE ---
         let audioCtx;
         let audioBuffer;
 
@@ -154,17 +180,44 @@
             source.start(0);
         }
 
-        // --- TIMER LOGIC ---
-        let timerInterval;
-        let timeLeft = 1200;
-        const display = document.getElementById('timerDisplay');
-        const startBtn = document.getElementById('startTimerBtn');
-        const stopBtn = document.getElementById('stopTimerBtn');
-        const ipadRem = document.getElementById('ipadReminder');
+        // --- FETCH DATA FROM SHEET ---
+        async function fetchHistory() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.remove('hidden');
+            try {
+                const response = await fetch(scriptURL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    localData = data;
+                    localStorage.setItem('katelyn_logs_backup', JSON.stringify(data));
+                    renderChart();
+                }
+            } catch (e) {
+                console.warn("Fetch failed, using local backup.", e);
+                localData = JSON.parse(localStorage.getItem('katelyn_logs_backup') || '[]');
+                renderChart();
+            } finally {
+                indicator.classList.add('hidden');
+            }
+        }
 
+        // --- TABS ---
+        function switchTab(t) {
+            document.getElementById('viewLog').classList.toggle('hidden', t !== 'log');
+            document.getElementById('viewReport').classList.toggle('hidden', t !== 'report');
+            document.getElementById('tabLog').classList.toggle('tab-active', t === 'log');
+            document.getElementById('tabReport').classList.toggle('tab-active', t === 'report');
+            if (t === 'report') fetchHistory();
+        }
+
+        // --- TIMER ---
+        let timerInterval, timeLeft = 1200;
+        const display = document.getElementById('timerDisplay');
+        
         function updateDisplay() {
-            const m = Math.floor(timeLeft / 60);
-            const s = timeLeft % 60;
+            const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
             display.innerText = `${m}:${s.toString().padStart(2, '0')}`;
         }
 
@@ -173,13 +226,12 @@
             updateDisplay();
         };
 
-        startBtn.onclick = async () => {
-            await initAudio(); // Initial interaction unlocks Web Audio
+        document.getElementById('startTimerBtn').onclick = async () => {
+            await initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            startBtn.classList.add('hidden');
-            stopBtn.classList.remove('hidden');
-            ipadRem.classList.remove('hidden');
+            document.getElementById('startTimerBtn').classList.add('hidden');
+            document.getElementById('stopTimerBtn').classList.remove('hidden');
+            document.getElementById('ipadReminder').classList.remove('hidden');
 
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -189,31 +241,19 @@
                     playAlarm();
                     document.getElementById('duration').value = document.getElementById('timerInput').value;
                     showMessage("⏰ Time's up! Great reading!", "bg-purple-600 text-white shadow-xl");
-                    stopBtn.click();
+                    document.getElementById('stopTimerBtn').click();
                 }
             }, 1000);
         };
 
-        stopBtn.onclick = () => {
+        document.getElementById('stopTimerBtn').onclick = () => {
             clearInterval(timerInterval);
-            stopBtn.classList.add('hidden');
-            startBtn.classList.remove('hidden');
-            ipadRem.classList.add('hidden');
+            document.getElementById('stopTimerBtn').classList.add('hidden');
+            document.getElementById('startTimerBtn').classList.remove('hidden');
+            document.getElementById('ipadReminder').classList.add('hidden');
         };
 
-        // --- TABS & FORM ---
-        function switchTab(t) {
-            document.getElementById('viewLog').classList.toggle('hidden', t !== 'log');
-            document.getElementById('viewReport').classList.toggle('hidden', t !== 'report');
-            document.getElementById('tabLog').classList.toggle('tab-active', t === 'log');
-            document.getElementById('tabReport').classList.toggle('tab-active', t === 'report');
-            if (t === 'report') renderChart();
-        }
-
-        let localData = JSON.parse(localStorage.getItem('katelyn_logs') || '[]');
-        document.getElementById('date').valueAsDate = new Date();
-        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
-
+        // --- SUBMIT LOG ---
         document.getElementById('readingForm').onsubmit = async (e) => {
             e.preventDefault();
             const log = {
@@ -222,12 +262,94 @@
                 duration: parseInt(document.getElementById('duration').value),
                 language: document.querySelector('input[name="language"]:checked').value
             };
-            localData.push(log);
-            localStorage.setItem('katelyn_logs', JSON.stringify(localData));
-            showMessage("Saved! 🌟", "bg-green-100 text-green-700");
-            e.target.reset();
-            document.getElementById('date').valueAsDate = new Date();
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "Saving... 🌟";
+
+            try {
+                await fetch(scriptURL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify(log) 
+                });
+                
+                showMessage("Great job! Saved to your sheet. 📖", "bg-green-100 text-green-700");
+                e.target.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                
+                localData.push(log);
+                localStorage.setItem('katelyn_logs_backup', JSON.stringify(localData));
+            } catch (e) {
+                showMessage("Check internet connection.", "bg-red-100 text-red-700");
+            } finally {
+                btn.disabled = false; btn.innerText = "Log Reading! ✨";
+            }
         };
+
+        // --- CHART & FILTERS ---
+        function updateChartFilter(lang) {
+            currentFilter = lang;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const isActive = btn.dataset.filter === lang;
+                btn.classList.toggle('bg-white', isActive);
+                btn.classList.toggle('shadow-sm', isActive);
+                btn.classList.toggle('text-pink-600', isActive);
+                btn.classList.toggle('text-gray-500', !isActive);
+            });
+            renderChart();
+        }
+
+        document.getElementById('reportMonth').onchange = renderChart;
+
+        function renderChart() {
+            const month = document.getElementById('reportMonth').value;
+            if (!month) return;
+
+            const filtered = localData.filter(d => {
+                const dDate = d.date.substring(0, 7);
+                const matchMonth = dDate === month;
+                const matchLang = currentFilter === 'All' || d.language === currentFilter;
+                return matchMonth && matchLang;
+            });
+
+            const books = new Set(filtered.map(d => d.title.toLowerCase().trim()));
+            const total = filtered.reduce((acc, d) => acc + Number(d.duration), 0);
+
+            document.getElementById('statTotal').innerText = `${total} min`;
+            document.getElementById('statBooks').innerText = books.size;
+
+            const ctx = document.getElementById('readingChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            // Days 1 to 31
+            const daysInMonth = 31;
+            const daysLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            const dataPoints = Array.from({length: daysInMonth}, (_, i) => {
+                const dayStr = `${month}-${(i + 1).toString().padStart(2, '0')}`;
+                return filtered.filter(d => d.date === dayStr).reduce((a, b) => a + Number(b.duration), 0);
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: daysLabels,
+                    datasets: [{
+                        data: dataPoints,
+                        backgroundColor: currentFilter === 'French' ? '#a855f7' : '#ec4899',
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { stepSize: 10 } }, 
+                        x: { grid: { display: false } } 
+                    }
+                }
+            });
+        }
 
         function showMessage(msg, cls) {
             const s = document.getElementById('status');
@@ -237,36 +359,11 @@
             setTimeout(() => s.classList.add('hidden'), 5000);
         }
 
-        // --- BASIC CHART ---
-        let chartInstance;
-        function renderChart() {
-            const month = document.getElementById('reportMonth').value;
-            const filtered = localData.filter(d => d.date.startsWith(month));
-            const books = new Set(filtered.map(d => d.title.toLowerCase()));
-            const total = filtered.reduce((acc, d) => acc + d.duration, 0);
-
-            document.getElementById('statTotal').innerText = `${total} min`;
-            document.getElementById('statBooks').innerText = books.size;
-
-            const ctx = document.getElementById('readingChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: Array.from({length: 31}, (_, i) => i + 1),
-                    datasets: [{
-                        label: 'Minutes',
-                        data: Array.from({length: 31}, (_, i) => {
-                            const dayStr = `${month}-${(i + 1).toString().padStart(2, '0')}`;
-                            return filtered.filter(d => d.date === dayStr).reduce((a, b) => a + b.duration, 0);
-                        }),
-                        backgroundColor: '#ec4899',
-                        borderRadius: 4
-                    }]
-                },
-                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-            });
-        }
+        window.onload = () => {
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
+            fetchHistory();
+        };
     </script>
 </body>
 </html>
