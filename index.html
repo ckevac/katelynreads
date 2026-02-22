@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katelyn's Reading Log</title>
+    
+    <!-- Web App Icon for iPad Home Screen -->
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
         body { 
@@ -16,130 +21,168 @@
         .pink-gradient { background: linear-gradient(to right, #ec4899, #d946ef); }
         .purple-btn { background-color: #a855f7; }
         .yellow-accent { background-color: #facc15; }
+        
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.2);
+        }
+
+        .tab-active {
+            border-bottom: 4px solid #ec4899;
+            color: #ec4899;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-8 card w-full max-w-md border-t-8 border-pink-400">
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-transparent bg-clip-text pink-gradient mb-2">📚 Katelyn's Reading Log</h1>
-            <p class="text-gray-500 font-medium">Ready for a new story?</p>
+    <div class="bg-white p-6 card w-full max-w-md border-t-8 border-pink-400">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="flex justify-center mb-2">
+                <img id="logoImg" 
+                     src="https://raw.githubusercontent.com/ckevac/katelynreads/main/KatelynReading.png" 
+                     onerror="this.src='https://api.dicebear.com/7.x/fun-emoji/svg?seed=reading&backgroundColor=fdf2f8'"
+                     alt="Katelyn Reading" 
+                     class="profile-img rounded-full">
+            </div>
+            <h1 class="text-2xl font-bold text-transparent bg-clip-text pink-gradient">Katelyn's Reading Log</h1>
         </div>
 
-        <!-- Timer Section -->
-        <div class="mb-8 p-4 bg-purple-50 rounded-2xl border-2 border-purple-100">
-            <h2 class="text-center text-purple-700 font-bold mb-3 flex items-center justify-center gap-2">
-                ⏱️ Reading Timer
-            </h2>
-            <div id="timerDisplay" class="text-4xl font-bold text-center text-purple-600 mb-4">20:00</div>
-            
-            <div class="flex gap-2 mb-4">
-                <input type="number" id="timerInput" placeholder="Min" min="1" value="20"
-                    class="w-20 p-2 text-center border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400">
-                <button id="setTimerBtn" class="flex-1 purple-btn text-white font-bold py-2 rounded-lg btn-animate">Set</button>
-            </div>
-            
-            <div class="flex gap-2">
-                <button id="startTimerBtn" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg btn-animate">Start</button>
-                <button id="stopTimerBtn" class="flex-1 bg-red-400 text-white font-bold py-2 rounded-lg btn-animate hidden">Stop</button>
-                <button id="resetTimerBtn" class="flex-1 bg-gray-400 text-white font-bold py-2 rounded-lg btn-animate">Reset</button>
-            </div>
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-100 mb-6">
+            <button id="tabLog" class="flex-1 py-2 font-bold text-gray-400 tab-active" onclick="switchTab('log')">✍️ Log</button>
+            <button id="tabReport" class="flex-1 py-2 font-bold text-gray-400" onclick="switchTab('report')">📊 Reports</button>
         </div>
 
-        <form id="readingForm" class="space-y-5">
-            <hr class="border-pink-100 mb-5">
-            
-            <!-- Date -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Date</label>
-                <input type="date" id="date" required 
-                    class="w-full p-3 border-2 border-pink-100 rounded-xl focus:border-pink-400 focus:outline-none transition-colors">
-            </div>
-
-            <!-- Title -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Book Title</label>
-                <input type="text" id="title" placeholder="What book is it today?" required
-                    class="w-full p-3 border-2 border-purple-100 rounded-xl focus:border-purple-400 focus:outline-none transition-colors">
-            </div>
-
-            <!-- Duration -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Minutes Read</label>
-                <input type="number" id="duration" placeholder="How many minutes?" required min="1"
-                    class="w-full p-3 border-2 border-yellow-200 rounded-xl focus:border-yellow-400 focus:outline-none transition-colors">
-            </div>
-
-            <!-- Language -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Language</label>
-                <div class="flex gap-4">
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="language" value="English" checked class="hidden peer">
-                        <div class="text-center p-3 border-2 border-pink-100 rounded-xl peer-checked:bg-pink-500 peer-checked:text-white peer-checked:border-pink-500 transition-all font-bold">
-                            English 🇬🇧
-                        </div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="language" value="French" class="hidden peer">
-                        <div class="text-center p-3 border-2 border-purple-100 rounded-xl peer-checked:bg-purple-500 peer-checked:text-white peer-checked:border-purple-500 transition-all font-bold">
-                            French 🇫🇷
-                        </div>
-                    </label>
+        <!-- LOG VIEW -->
+        <div id="viewLog">
+            <!-- Timer Section -->
+            <div class="mb-6 p-4 bg-purple-50 rounded-2xl border-2 border-purple-100">
+                <div id="timerDisplay" class="text-3xl font-bold text-center text-purple-600 mb-3">20:00</div>
+                <div class="flex gap-2 mb-3">
+                    <input type="number" id="timerInput" placeholder="Min" min="1" value="20"
+                        class="w-16 p-2 text-center border-2 border-purple-200 rounded-lg focus:outline-none">
+                    <button id="setTimerBtn" class="flex-1 purple-btn text-white font-bold py-2 rounded-lg btn-animate">Set</button>
+                    <button id="startTimerBtn" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg btn-animate">Start</button>
+                    <button id="stopTimerBtn" class="flex-1 bg-red-400 text-white font-bold py-2 rounded-lg btn-animate hidden">Stop</button>
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn"
-                class="w-full pink-gradient text-white font-bold py-4 rounded-xl shadow-lg transition-all btn-animate text-lg">
-                Log My Reading! ✨
-            </button>
-        </form>
+            <form id="readingForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Date</label>
+                    <input type="date" id="date" required 
+                        class="w-full p-3 border-2 border-pink-100 rounded-xl focus:border-pink-400 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Book Title</label>
+                    <input type="text" id="title" placeholder="Book title..." required
+                        class="w-full p-3 border-2 border-purple-100 rounded-xl focus:border-purple-400 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase ml-1">Minutes Read</label>
+                    <input type="number" id="duration" placeholder="0" required min="1"
+                        class="w-full p-3 border-2 border-yellow-200 rounded-xl focus:border-yellow-400 focus:outline-none">
+                </div>
+                <div>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="language" value="English" checked class="hidden peer">
+                            <div class="text-sm text-center p-2 border-2 border-pink-100 rounded-xl peer-checked:bg-pink-500 peer-checked:text-white font-bold transition-all">
+                                English 🇬🇧
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="language" value="French" class="hidden peer">
+                            <div class="text-sm text-center p-2 border-2 border-purple-100 rounded-xl peer-checked:bg-purple-500 peer-checked:text-white font-bold transition-all">
+                                French 🇫🇷
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn"
+                    class="w-full pink-gradient text-white font-bold py-4 rounded-xl shadow-lg transition-all btn-animate text-lg mt-2">
+                    Log My Reading! ✨
+                </button>
+            </form>
+        </div>
+
+        <!-- REPORT VIEW -->
+        <div id="viewReport" class="hidden">
+            <div class="space-y-4">
+                <!-- Month Selector -->
+                <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-xl">
+                    <label class="text-sm font-bold text-gray-600 px-2">Month:</label>
+                    <input type="month" id="reportMonth" class="flex-1 bg-transparent border-none focus:outline-none font-bold text-purple-600">
+                </div>
+
+                <!-- Language Toggle for Chart -->
+                <div class="flex bg-gray-100 p-1 rounded-xl">
+                    <button onclick="updateChartFilter('All')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg bg-white shadow-sm text-pink-600" data-filter="All">Both</button>
+                    <button onclick="updateChartFilter('English')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="English">EN</button>
+                    <button onclick="updateChartFilter('French')" class="filter-btn flex-1 py-1 text-xs font-bold rounded-lg text-gray-500" data-filter="French">FR</button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-100 p-2">
+                    <canvas id="readingChart" height="250"></canvas>
+                </div>
+
+                <div id="statsSummary" class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-pink-50 p-3 rounded-xl border border-pink-100">
+                        <div class="text-xs text-pink-400 font-bold uppercase">Total Time</div>
+                        <div id="statTotal" class="text-xl font-bold text-pink-600">0 min</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                        <div class="text-xs text-purple-400 font-bold uppercase">Books</div>
+                        <div id="statBooks" class="text-xl font-bold text-purple-600">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div id="status" class="mt-4 text-center hidden">
             <p class="p-3 rounded-lg font-medium"></p>
         </div>
     </div>
 
-    <!-- Audio context sound for timer -->
     <script>
-        const playAlarm = () => {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.5);
-        };
+        // --- DATA PERSISTENCE ---
+        // We'll store data locally for the chart to work offline/instantly, 
+        // while still sending it to Google Sheets.
+        let localData = JSON.parse(localStorage.getItem('katelyn_logs') || '[]');
+        let chartInstance = null;
+        let currentFilter = 'All';
 
-        // Timer Logic
+        // --- TABS ---
+        function switchTab(tab) {
+            document.getElementById('viewLog').classList.toggle('hidden', tab !== 'log');
+            document.getElementById('viewReport').classList.toggle('hidden', tab !== 'report');
+            document.getElementById('tabLog').classList.toggle('tab-active', tab === 'log');
+            document.getElementById('tabReport').classList.toggle('tab-active', tab === 'report');
+            if (tab === 'report') renderChart();
+        }
+
+        // --- TIMER ---
         let timerInterval;
-        let timeLeft = 1200; // 20 mins default
+        let timeLeft = 1200;
         const timerDisplay = document.getElementById('timerDisplay');
         const timerInput = document.getElementById('timerInput');
         const startBtn = document.getElementById('startTimerBtn');
         const stopBtn = document.getElementById('stopTimerBtn');
-        const resetBtn = document.getElementById('resetTimerBtn');
         const setBtn = document.getElementById('setTimerBtn');
-        const durationInput = document.getElementById('duration');
 
-        function updateDisplay() {
+        function updateTimerDisplay() {
             const mins = Math.floor(timeLeft / 60);
             const secs = timeLeft % 60;
             timerDisplay.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
         setBtn.onclick = () => {
-            const val = parseInt(timerInput.value);
-            if (val > 0) {
-                timeLeft = val * 60;
-                updateDisplay();
-            }
+            timeLeft = parseInt(timerInput.value || 20) * 60;
+            updateTimerDisplay();
         };
 
         startBtn.onclick = () => {
@@ -147,13 +190,12 @@
             stopBtn.classList.remove('hidden');
             timerInterval = setInterval(() => {
                 timeLeft--;
-                updateDisplay();
+                updateTimerDisplay();
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    playAlarm();
-                    // Auto-fill the duration box when timer finishes!
-                    durationInput.value = timerInput.value;
-                    alert("⏰ Time's up, Katelyn! Great reading!");
+                    new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+                    document.getElementById('duration').value = timerInput.value;
+                    alert("⏰ Time's up, Katelyn!");
                     stopBtn.classList.add('hidden');
                     startBtn.classList.remove('hidden');
                 }
@@ -166,58 +208,112 @@
             startBtn.classList.remove('hidden');
         };
 
-        resetBtn.onclick = () => {
-            clearInterval(timerInterval);
-            timeLeft = parseInt(timerInput.value || 20) * 60;
-            updateDisplay();
-            stopBtn.classList.add('hidden');
-            startBtn.classList.remove('hidden');
-        };
-
-        // Form Submission Logic
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwQpKw9iatIsHzoWbAFleOpd__PbTWYeeQfZRsn4EV1Ku5qoNrbhrSD9bRmEAhN-VE/exec'; 
-
+        // --- FORM ---
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwQpKw9iatIsHzoWbAFleOpd__PbTWYeeQfZRsn4EV1Ku5qoNrbhrSD9bRmEAhN-VE/exec';
         document.getElementById('date').valueAsDate = new Date();
-        const form = document.getElementById('readingForm');
-        const status = document.getElementById('status');
-        const submitBtn = document.getElementById('submitBtn');
+        document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7);
 
-        form.addEventListener('submit', async (e) => {
+        document.getElementById('readingForm').onsubmit = async (e) => {
             e.preventDefault();
-            
-            const formData = {
+            const log = {
                 date: document.getElementById('date').value,
                 title: document.getElementById('title').value,
-                duration: document.getElementById('duration').value,
+                duration: parseInt(document.getElementById('duration').value),
                 language: document.querySelector('input[name="language"]:checked').value
             };
 
-            submitBtn.disabled = true;
-            submitBtn.innerText = "Sending to Sheet... 🚀";
-            
-            try {
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
+            // Save locally
+            localData.push(log);
+            localStorage.setItem('katelyn_logs', JSON.stringify(localData));
 
-                showMessage("Awesome job, Katelyn! Your reading is saved. 🌟", "bg-pink-100 text-pink-700 border-2 border-pink-200");
-                form.reset();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "Saving... 🌟";
+
+            try {
+                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(log) });
+                showMessage("Great job! Saved to your sheet. 📖", "bg-green-100 text-green-700");
+                document.getElementById('readingForm').reset();
                 document.getElementById('date').valueAsDate = new Date();
-            } catch (error) {
-                showMessage("Oh no! It didn't save. Ask Mom for help!", "bg-red-100 text-red-700");
+            } catch (e) {
+                showMessage("Saved locally, but couldn't send to Sheet.", "bg-yellow-100 text-yellow-700");
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = "Log My Reading! ✨";
+                btn.disabled = false;
+                btn.innerText = "Log My Reading! ✨";
             }
-        });
+        };
+
+        // --- CHARTS & REPORTS ---
+        function updateChartFilter(lang) {
+            currentFilter = lang;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const isActive = btn.dataset.filter === lang;
+                btn.classList.toggle('bg-white', isActive);
+                btn.classList.toggle('shadow-sm', isActive);
+                btn.classList.toggle('text-pink-600', isActive);
+                btn.classList.toggle('text-gray-500', !isActive);
+            });
+            renderChart();
+        }
+
+        document.getElementById('reportMonth').onchange = renderChart;
+
+        function renderChart() {
+            const selectedMonth = document.getElementById('reportMonth').value; // YYYY-MM
+            const filteredData = localData.filter(d => {
+                const isMonth = d.date.startsWith(selectedMonth);
+                const isLang = currentFilter === 'All' || d.language === currentFilter;
+                return isMonth && isLang;
+            });
+
+            // Group by Day
+            const daysInMonth = new Date(selectedMonth.split('-')[0], selectedMonth.split('-')[1], 0).getDate();
+            const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            const dataPoints = Array(daysInMonth).fill(0);
+            
+            let totalTime = 0;
+            let uniqueBooks = new Set();
+
+            filteredData.forEach(d => {
+                const day = parseInt(d.date.split('-')[2]);
+                dataPoints[day-1] += d.duration;
+                totalTime += d.duration;
+                uniqueBooks.add(d.title.toLowerCase());
+            });
+
+            document.getElementById('statTotal').innerText = `${totalTime} min`;
+            document.getElementById('statBooks').innerText = uniqueBooks.size;
+
+            const ctx = document.getElementById('readingChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Minutes',
+                        data: dataPoints,
+                        backgroundColor: currentFilter === 'French' ? '#a855f7' : '#ec4899',
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
 
         function showMessage(msg, classes) {
-            status.className = `mt-4 text-center ${classes}`;
-            status.querySelector('p').innerText = msg;
+            const status = document.getElementById('status');
+            status.className = `mt-4 text-center ${classes} p-3 rounded-lg`;
+            status.innerHTML = `<p>${msg}</p>`;
             status.classList.remove('hidden');
             setTimeout(() => status.classList.add('hidden'), 5000);
         }
