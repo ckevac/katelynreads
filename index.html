@@ -321,31 +321,88 @@
             const ctx = document.getElementById('readingChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
 
-            // Days 1 to 31
             const daysInMonth = 31;
             const daysLabels = Array.from({length: daysInMonth}, (_, i) => i + 1);
-            const dataPoints = Array.from({length: daysInMonth}, (_, i) => {
-                const dayStr = `${month}-${(i + 1).toString().padStart(2, '0')}`;
-                return filtered.filter(d => d.date === dayStr).reduce((a, b) => a + Number(b.duration), 0);
-            });
+
+            // Datasets configuration
+            let datasets = [];
+
+            if (currentFilter === 'All') {
+                // Stacked View: Separate English and French
+                const englishData = daysLabels.map(day => {
+                    const dayStr = `${month}-${day.toString().padStart(2, '0')}`;
+                    return filtered
+                        .filter(d => d.date === dayStr && d.language === 'English')
+                        .reduce((a, b) => a + Number(b.duration), 0);
+                });
+
+                const frenchData = daysLabels.map(day => {
+                    const dayStr = `${month}-${day.toString().padStart(2, '0')}`;
+                    return filtered
+                        .filter(d => d.date === dayStr && d.language === 'French')
+                        .reduce((a, b) => a + Number(b.duration), 0);
+                });
+
+                datasets = [
+                    {
+                        label: 'English',
+                        data: englishData,
+                        backgroundColor: '#ec4899', // Pink
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'French',
+                        data: frenchData,
+                        backgroundColor: '#a855f7', // Purple
+                        borderRadius: 4
+                    }
+                ];
+            } else {
+                // Single Filter View
+                const singleData = daysLabels.map(day => {
+                    const dayStr = `${month}-${day.toString().padStart(2, '0')}`;
+                    return filtered
+                        .filter(d => d.date === dayStr)
+                        .reduce((a, b) => a + Number(b.duration), 0);
+                });
+
+                datasets = [{
+                    data: singleData,
+                    backgroundColor: currentFilter === 'French' ? '#a855f7' : '#ec4899',
+                    borderRadius: 4
+                }];
+            }
 
             chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: daysLabels,
-                    datasets: [{
-                        data: dataPoints,
-                        backgroundColor: currentFilter === 'French' ? '#a855f7' : '#ec4899',
-                        borderRadius: 4
-                    }]
+                    datasets: datasets
                 },
                 options: { 
                     responsive: true,
                     maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label ? context.dataset.label + ': ' : ''}${context.parsed.y} min`;
+                                }
+                            }
+                        }
+                    },
                     scales: { 
-                        y: { beginAtZero: true, grid: { color: '#f3f4f6' }, ticks: { stepSize: 10 } }, 
-                        x: { grid: { display: false } } 
+                        y: { 
+                            stacked: true,
+                            beginAtZero: true, 
+                            grid: { color: '#f3f4f6' }, 
+                            ticks: { stepSize: 10 } 
+                        }, 
+                        x: { 
+                            stacked: true,
+                            grid: { display: false } 
+                        } 
                     }
                 }
             });
